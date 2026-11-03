@@ -59,3 +59,20 @@ class BloomFilter:
         """Current false-positive probability given how full the filter is."""
         fraction_set = self.bits_set / self.size
         return fraction_set**self.hash_count
+
+    def union(self, other: BloomFilter) -> BloomFilter:
+        """A new filter containing every item in either source.
+
+        The filters must be the same shape (same size and hash count), which holds when they
+        were built with the same capacity and error rate. Membership is preserved exactly:
+        anything present in either input is present in the union.
+        """
+        if self.size != other.size or self.hash_count != other.hash_count:
+            raise ValueError("bloom filters must share the same size and hash_count to union")
+        result = BloomFilter(self.capacity, self.error_rate)
+        result._bits = bytearray(a | b for a, b in zip(self._bits, other._bits, strict=True))
+        result._count = self._count + other._count
+        return result
+
+    def __or__(self, other: BloomFilter) -> BloomFilter:
+        return self.union(other)

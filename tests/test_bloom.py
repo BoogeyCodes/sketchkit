@@ -66,3 +66,26 @@ def test_hashing_is_reproducible_across_instances():
 def test_validates_arguments(capacity: int, error: float):
     with pytest.raises(ValueError):
         BloomFilter(capacity=capacity, error_rate=error)
+
+
+def test_union_contains_items_from_both():
+    a = BloomFilter(capacity=1000, error_rate=0.01)
+    b = BloomFilter(capacity=1000, error_rate=0.01)
+    for x in ("alice", "bob"):
+        a.add(x)
+    for x in ("carol", "dave"):
+        b.add(x)
+
+    merged = a | b
+    for x in ("alice", "bob", "carol", "dave"):
+        assert x in merged
+    assert len(merged) == 4
+
+
+def test_union_requires_matching_shape():
+    import pytest
+
+    a = BloomFilter(capacity=1000, error_rate=0.01)
+    b = BloomFilter(capacity=500, error_rate=0.01)
+    with pytest.raises(ValueError):
+        a.union(b)
